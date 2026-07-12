@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<title>기타 이론</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+<meta name="theme-color" content="#0E1113" />
+<link rel="manifest" href="manifest.webmanifest" />
+<!-- iOS: 홈 화면에 추가하면 전체화면 앱처럼 실행 -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="기타 이론" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<style>
+  html, body { margin: 0; padding: 0; background: #0E1113; }
+  body {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-select: none; user-select: none;
+    overscroll-behavior-y: none;
+  }
+  /* 노치/홈바 안전영역 */
+  #root { min-height: 100dvh; padding-bottom: env(safe-area-inset-bottom); box-sizing: border-box; }
+  input[type="range"] { -webkit-user-select: auto; user-select: auto; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="bundle.js"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("sw.js").catch(function () {});
+    });
+  }
+</script>
+</body>
+</html>
