@@ -60,6 +60,28 @@ describe("CAGED 포지션", () => {
   });
 });
 
+describe("고프렛 잘림 (Phase 2-4)", () => {
+  it("3음/줄은 최대 17프렛까지 올라간다 — 지판이 그만큼 그려져야 한다", () => {
+    let maxFret = 0, over15 = 0;
+    for (const [scale] of SEVEN) {
+      const ivset = scaleIvSet(scale);
+      for (let root = 0; root < 12; root++) {
+        for (let f0 = 0; f0 < 12; f0++) {
+          if (!ivset.has(((4 + f0 - root) % 12 + 12) % 12)) continue;
+          for (const k of build3nps(root, ivset, f0)) {
+            const fr = +k.split("-")[1];
+            if (fr > maxFret) maxFret = fr;
+            if (fr > 15) over15++;
+          }
+        }
+      }
+    }
+    // 예전에는 지판을 15프렛까지만 그려서 이 음들이 화면에서 사라졌다
+    expect(over15, "15프렛 초과 음이 하나도 없다면 이 검사는 의미가 없다").toBeGreaterThan(0);
+    expect(maxFret).toBeLessThanOrEqual(17); // ScaleBoard가 늘려 그리는 상한
+  });
+});
+
 describe("대각선 (익스텐디드)", () => {
   it("생성되는 모든 대각선의 프렛이 0~15 안이고 음이 전부 스케일 음이다", () => {
     let made = 0;

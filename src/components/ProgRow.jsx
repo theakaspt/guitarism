@@ -5,7 +5,7 @@ export function ProgRow({ deg, keyData, big }) {
   const size = big ? 17 : 15;
   return (
     <>
-      <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10.5, color: C.dim, letterSpacing: "0.06em", marginBottom: 3 }}>
+      <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: C.dim, letterSpacing: "0.06em", marginBottom: 3 }}>
         {deg.map((di) => keyData.chords[di][0]).join("   ›   ")}
       </div>
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>

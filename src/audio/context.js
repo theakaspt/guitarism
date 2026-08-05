@@ -7,6 +7,19 @@ export function AC() {
   return _ac;
 }
 
+// 아이폰은 "사용자가 버튼을 누른 그 순간"에만 소리 장치를 깨워 준다.
+// AC()의 resume()은 결과를 기다리지 않아서, 첫 재생 때 아직 안 깨어난 상태로 예약이 나갈 수 있다.
+// 재생 버튼처럼 소리를 시작하는 자리에서는 이 함수로 "깨어남 완료"를 기다린 뒤 진행한다.
+// 반환: 깨어난 오디오 장치. 못 깨웠으면 state가 "running"이 아닌 채로 돌아온다(안내 문구용).
+export async function ensureAudio() {
+  const c = AC();
+  if (!c) return null;
+  if (c.state !== "running") {
+    try { await c.resume(); } catch (e) {}
+  }
+  return c;
+}
+
 // ── 은은한 공간 울림(리버브): 합성 임펄스로 만든 마스터 버스(한 번만 생성) ──
 // ── 마스터 버스: 모든 소리가 여기로 → 리미터 → 출력 (동시 타격 시 찌그러짐 방지) ──
 export let _master = null;

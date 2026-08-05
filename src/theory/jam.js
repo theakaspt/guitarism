@@ -54,7 +54,9 @@ export function _pickVoicing(cands, prev) {
   }
   return best;
 }
-export function voiceProgression(form, keyPC) {
+// 보이싱 계산 결과를 "고른 후보 객체 그대로" 돌려준다.
+// (midis 뿐 아니라 frets·set이 있어야 지판에 그릴 수 있다 — Phase 2 보이싱 보기용)
+export function voiceProgressionFull(form, keyPC) {
   const build = (seed) => {
     let prev = seed; const seq = [];
     for (const ch of form.chords) {
@@ -67,7 +69,11 @@ export function voiceProgression(form, keyPC) {
   };
   const pass1 = build(null);
   const pass2 = build(pass1[pass1.length - 1]); // 루프 이음새(마지막→첫)까지 매끄럽게
-  return pass2.map((v) => v.midis);
+  return pass2;
+}
+// 기존 호출부는 그대로 midis 배열만 받는다 (값·순서 동일)
+export function voiceProgression(form, keyPC) {
+  return voiceProgressionFull(form, keyPC).map((v) => v.midis);
 }
 // ── 컴핑 리듬 (스윙: 뒷박은 셋잇단 위치 x.66박) · b=박위치, d=음길이(박) ──
 // ── 컴핑 리듬 (스윙: 뒷박은 셋잇단 위치 x.66박 / 스트레이트: x.5박) ──
@@ -87,7 +93,8 @@ export const COMP_RHYTHMS = [
 export function jamTimeline(form, keyPC, rhythm, drumFeel) {
   const R = rhythm || COMP_RHYTHMS[0];
   const rBars = R.bars || 1;
-  const voiced = voiceProgression(form, keyPC);
+  const voicings = voiceProgressionFull(form, keyPC);
+  const voiced = voicings.map((v) => v.midis);
   const timeline = []; let bar = 0;
   form.chords.forEach((ch, ci) => {
     const midis = voiced[ci];
@@ -98,7 +105,7 @@ export function jamTimeline(form, keyPC, rhythm, drumFeel) {
         const hBar = Math.floor(h.b / 4);
         if (rBars > 1 && hBar !== ((bar + b) % rBars)) return;
         const beatInBar = h.b - hBar * 4;
-        timeline.push({ beat: (bar + b) * 4 + beatInBar, midis: h.bass ? low : midis, durBeats: h.d });
+        timeline.push({ beat: (bar + b) * 4 + beatInBar, midis: h.bass ? low : midis, durBeats: h.d, ci });
       });
     }
     bar += ch.bars;
@@ -116,7 +123,7 @@ export function jamTimeline(form, keyPC, rhythm, drumFeel) {
     }
   }
   timeline.sort((a, z) => a.beat - z.beat);
-  return { timeline, loopBeats: totalBars * 4 };
+  return { timeline, loopBeats: totalBars * 4, voicings };
 }
 
 // ── 잼 ↔ 스케일 연결 ──────────────────────────────────

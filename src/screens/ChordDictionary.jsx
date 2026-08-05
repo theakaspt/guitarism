@@ -5,6 +5,7 @@ import { CHORD_TYPES, buildVoicings } from "../theory/chords.js";
 import { strum } from "../audio/play.js";
 import VWheel from "../components/VWheel.jsx";
 import Screen from "../components/Screen.jsx";
+import { useStored, intIn, intInOrNull } from "../storage.js";
 
 
 // ══════════════════════════════════════════════════════
@@ -78,9 +79,10 @@ export function ChordFretboard({ voicing }) {
 }
 
 export function ChordDictionary() {
-  const [root, setRoot] = useState(0);   // C
-  const [ti, setTi] = useState(0);       // maj
-  const [bass, setBass] = useState(null); // 슬래시 베이스 (null = 없음)
+  // 앱을 껐다 켜도 마지막에 보던 코드가 그대로 뜬다 (저장은 src/storage.js가 담당)
+  const [root, setRoot] = useStored("chord.root", 0, intIn(0, ROOTS.length - 1));   // C
+  const [ti, setTi] = useStored("chord.type", 0, intIn(0, CHORD_TYPES.length - 1)); // maj
+  const [bass, setBass] = useStored("chord.bass", null, intInOrNull(0, ROOTS.length - 1)); // 슬래시 베이스 (null = 없음)
   const [pos, setPos] = useState(0);
   const type = CHORD_TYPES[ti];
   const voicings = buildVoicings(root, type.id, bass);
@@ -97,16 +99,16 @@ export function ChordDictionary() {
     <Screen>
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <div style={{ flex: "0 0 27%", minWidth: 0 }}>
-          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.16em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>루트</div>
-          <VWheel items={ROOTS} value={root} onChange={(i) => { setRoot(i); setPos(0); }} size={17} />
+          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>루트</div>
+          <VWheel label="코드 루트" items={ROOTS} value={root} onChange={(i) => { setRoot(i); setPos(0); }} size={17} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.16em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>타입</div>
-          <VWheel items={CHORD_TYPES.map((t) => t.label)} value={ti} onChange={(i) => { setTi(i); setPos(0); }} size={15} />
+          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>타입</div>
+          <VWheel label="코드 타입" items={CHORD_TYPES.map((t) => t.label)} value={ti} onChange={(i) => { setTi(i); setPos(0); }} size={15} />
         </div>
         <div style={{ flex: "0 0 27%", minWidth: 0 }}>
-          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.16em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>베이스</div>
-          <VWheel items={["없음", ...ROOTS]} value={bass === null ? 0 : bass + 1} onChange={(i) => { setBass(i === 0 ? null : i - 1); setPos(0); }} size={15} />
+          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>베이스</div>
+          <VWheel label="슬래시 베이스" items={["없음", ...ROOTS]} value={bass === null ? 0 : bass + 1} onChange={(i) => { setBass(i === 0 ? null : i - 1); setPos(0); }} size={15} />
         </div>
       </div>
 
@@ -116,7 +118,7 @@ export function ChordDictionary() {
         {voicing && voicings.length > 1 && (
           <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 12, flexWrap: "wrap" }}>
             {voicings.map((v, i) => (
-              <button key={i} onClick={() => setPos(i)} style={{ padding: "5px 11px", borderRadius: 999, cursor: "pointer", fontSize: 11.5, fontWeight: 700, background: i === p ? C.hub : "transparent", color: i === p ? C.brass : C.muted, border: `1px solid ${i === p ? C.brass : "transparent"}` }}>{v.label}</button>
+              <button key={i} onClick={() => setPos(i)} aria-pressed={i === p} style={{ padding: "5px 11px", borderRadius: 999, cursor: "pointer", fontSize: 11.5, fontWeight: 700, background: i === p ? C.hub : "transparent", color: i === p ? C.brass : C.muted, border: `1px solid ${i === p ? C.brass : "transparent"}` }}>{v.label}</button>
             ))}
           </div>
         )}
@@ -124,7 +126,7 @@ export function ChordDictionary() {
         {voicing && <ChordFretboard voicing={voicing} />}
 
         <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-          <button onClick={playChord} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 700, background: "transparent", color: C.brass, border: `1px solid ${C.brass}` }}>▶ 코드 듣기</button>
+          <button onClick={playChord} aria-label="이 코드 소리 듣기" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 700, background: "transparent", color: C.brass, border: `1px solid ${C.brass}` }}>▶ 코드 듣기</button>
         </div>
 
         <div style={{ textAlign: "center", fontSize: 11.5, color: C.muted, marginTop: 12 }}>

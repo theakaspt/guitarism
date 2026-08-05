@@ -11,7 +11,9 @@ import { master, reverb } from "./context.js";
 //  body=바디 공명(통울림) · detune=더블 스트링 디튠(센트) · rev=리버브 센드량
 //  amp=앰프/픽업 체인(일렉): 픽업 콤필터 + 진공관 새츄레이션 + 캐비닛
 export const PRESETS = {
-  acoustic: { label: "어쿠스틱", a: 0.58, decay: 0.9996, soft: 2, bodyMix: 0.08, gain: 0.24, lp: 4200, body: 1, detune: 7, rev: 0.30, amp: 0 },
+  // 표시 이름은 "클린". 소리가 진짜 통기타 같지는 않다는 평이 있어(보고서2 §7),
+  // 어쿠스틱이라고 약속하지 않는 이름으로 바꿨다. 내부 키(acoustic)는 저장값 호환을 위해 그대로 둔다.
+  acoustic: { label: "클린", a: 0.58, decay: 0.9996, soft: 2, bodyMix: 0.08, gain: 0.24, lp: 4200, body: 1, detune: 7, rev: 0.30, amp: 0 },
   // 재즈 아치탑: 줄 배음을 살리고(bodyMix↓, lp↑), 넥픽업 + 진공관 클린 + 캐비닛으로 따뜻하고 둥글게
   electric: { label: "일렉",     a: 0.62, decay: 0.9994, soft: 1, bodyMix: 0.02, gain: 0.10, lp: 5200, body: 0, detune: 0, rev: 0.20, amp: 1 },
 };

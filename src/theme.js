@@ -12,6 +12,6 @@ export const QCOLOR = { maj: C.brass, min: C.teal, dim: C.rose };
 export const QLABEL = { maj: "메이저", min: "마이너", dim: "디미니쉬" };
 
 export const SEG = { display: "flex", background: C.hub, borderRadius: 999, padding: 3, gap: 3, flexWrap: "wrap" };
-export const SEGLABEL = { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 10, letterSpacing: "0.2em", color: C.muted, textTransform: "uppercase" };
+export const SEGLABEL = { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace", fontSize: 11.5, letterSpacing: "0.14em", color: C.muted, textTransform: "uppercase" };
 // 공용 잼 패널 (디코더·스케일 양쪽에서 사용). showKey=true면 키 선택기 표시.
 export const _row = { display: "flex", alignItems: "center", gap: 8, marginTop: 11, flexWrap: "wrap" };

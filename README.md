@@ -61,7 +61,7 @@ npm run dev -- --host
 npm test
 ```
 
-40개 남짓한 자동 검사가 돈다. **전부 초록색(passed)이어야 한다.** 하나라도 빨간색이면 그 부분을 고치기 전에는 올리지 않는 게 안전하다. 무엇을 검사하는지는 아래 "자동 검사" 항목 참고.
+96개 남짓한 자동 검사가 돈다. **전부 초록색(passed)이어야 한다.** 하나라도 빨간색이면 그 부분을 고치기 전에는 올리지 않는 게 안전하다. 무엇을 검사하는지는 아래 "자동 검사" 항목 참고.
 
 빌드까지 한 번에 확인하려면:
 
@@ -112,6 +112,7 @@ guitarism/
 │  ├─ main.jsx           앱 시작점
 │  ├─ App.jsx            탭 3개를 묶는 곳
 │  ├─ theme.js           색 팔레트 C ← 색을 바꾸려면 여기만
+│  ├─ storage.js         설정 저장 (앱을 껐다 켜도 기억) ← localStorage는 여기서만 씀
 │  ├─ theory/            음악 데이터·계산 (화면과 무관한 순수 계산)
 │  │  ├─ notes.js        음이름, 5도권 키, 코드 공식
 │  │  ├─ chords.js       코드 운지·슬래시 코드 만들기
@@ -122,8 +123,8 @@ guitarism/
 │  │  ├─ tones.js        음색 5종
 │  │  ├─ drums.js        드럼 6종
 │  │  └─ play.js         코드/멜로디 재생
-│  ├─ jam/               잼 미니 플레이어 (JamProvider · JamBar)
-│  ├─ components/        공용 화면 부품 (세로휠, 탭바 등)
+│  ├─ jam/               잼 미니 플레이어 (JamProvider · JamBar · 보이싱 지판)
+│  ├─ components/        공용 화면 부품 (세로휠, 탭바, 에러 화면 등)
 │  └─ screens/           디코더 · 코드 사전 · 스케일 세 화면
 ├─ tests/                자동 검사
 ├─ tools/                이관 대조표 만드는 도구
@@ -133,6 +134,7 @@ guitarism/
 **색을 바꾸고 싶다** → `src/theme.js`
 **화면 글자를 바꾸고 싶다** → `src/screens/` 안의 해당 파일
 **소리를 바꾸고 싶다** → `src/audio/`
+**기억할 설정을 늘리고 싶다** → `src/storage.js`의 `useStored` 사용 (아래 참고)
 **음악 데이터(코드·스케일)를 바꾸고 싶다** → `src/theory/` (바꾼 뒤 반드시 `npm test`)
 
 ---
@@ -149,6 +151,14 @@ guitarism/
 | `tests/tone-safety.test.js` | 노이즈·클리핑을 일으키는 코드 패턴이 다시 들어오지 않았는지 |
 | `tests/migration-inventory.test.js` | 이관 과정에서 코드가 사라지지 않았는지 |
 | `tests/dist.test.js` | 빌드 결과물이 실제로 화면을 그리는지 |
+| `tests/storage.test.js` | 설정 저장이 망가진 값·저장 차단에도 앱을 죽이지 않는지 |
+| `tests/persistence.test.jsx` | 껐다 켰을 때 마지막 설정이 돌아오는지 |
+| `tests/error-boundary.test.jsx` | 문제가 생겼을 때 안내가 뜨고 "다시 시작"으로 복구되는지 |
+| `tests/scheduler.test.jsx` | **폰을 잠갔다 켰을 때 반주가 이어지고 소리가 몰아치지 않는지** |
+| `tests/jam-voicing.test.jsx` | 보이싱 지판이 맞게 그려지고, 재생 중 코드 표시가 따라가는지 |
+| `tests/a11y.test.jsx` | 버튼에 읽을 이름이 있고 키보드로 조작되는지 · 글자가 너무 작지 않은지 |
+| `tests/coachmarks.test.jsx` | 첫 실행 안내가 한 번만 뜨는지 |
+| `tests/highfret.test.jsx` | 높은 프렛 음이 잘리지 않고 그려지는지 |
 
 ---
 
@@ -161,5 +171,31 @@ guitarism/
 5. 잼 스케줄러는 `JamProvider` 안에 둔다. 화면 쪽으로 옮기면 탭을 옮길 때 반주가 끊긴다.
 6. 여러 마디짜리 리듬의 `h.b`는 패턴 전체 기준 박이다. 마디 거르는 계산을 건너뛰지 않는다.
 7. 훅(`useEffect` 등)은 그 안에서 쓰는 변수를 선언한 **뒤에** 놓는다.
+8. 잼 스케줄러의 `skipPast`를 지우지 않는다. 없으면 폰을 잠갔다 돌아올 때 밀린 소리가 한꺼번에 터진다.
+9. 글자 크기를 11px 아래로 내리지 않는다. (`tests/a11y.test.jsx`가 막는다)
+10. 버튼을 새로 만들면 `aria-label`을 붙인다. 아이콘만 있는 버튼은 화면 낭독기로 읽히지 않는다.
 
 자세한 배경은 `docs/기타앱개발보고서1.md`, `docs/기타앱개발보고서2.md`, `docs/기타앱개발보고서3.md` 참고.
+
+---
+
+## 설정을 기억하게 만들기
+
+앱은 마지막에 보던 탭, 잼 설정(키·폼·리듬·음색·드럼·BPM), 코드 사전 선택, 스케일 선택을 기억한다.
+기억할 항목을 늘리려면 `useState` 대신 `useStored`를 쓰면 된다.
+
+```js
+import { useStored, intIn, oneOf } from "../storage.js";
+
+// 이름, 기본값, 검사기
+const [root, setRoot] = useStored("scale.root", 9, intIn(0, 11));
+const [view, setView] = useStored("scale.view", "all", oneOf(["all", "box", "diag"]));
+```
+
+**검사기는 꼭 붙이자.** 나중에 목록이 줄어들면(예: 스케일 13종 → 10종) 저장해 둔 옛 번호가 범위를 벗어나 화면이 죽는다. 검사기가 그런 값을 버리고 기본값으로 돌려준다.
+
+`localStorage`를 직접 부르는 코드는 `src/storage.js` 안에만 있다. 나중에 클라우드 저장으로 바꿀 때 이 파일만 갈아끼우면 된다.
+
+**일부러 저장하지 않는 것:** 잼이 재생 중이었는지(앱을 켜자마자 소리가 나면 놀라니까), 포지션 번호(스케일을 바꾸면 어차피 처음으로 돌아간다).
+
+**첫 실행 안내를 다시 보려면** 브라우저에서 저장된 설정을 지우면 된다. 앱에서 일부러 오류를 낼 필요는 없고, 사파리 설정에서 사이트 데이터를 지우거나 개발자 도구 콘솔에서 `localStorage.clear()`를 실행하면 된다.

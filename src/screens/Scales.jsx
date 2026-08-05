@@ -7,13 +7,16 @@ import { melody } from "../audio/play.js";
 import { useJam } from "../jam/JamProvider.jsx";
 import Screen from "../components/Screen.jsx";
 import VWheel from "../components/VWheel.jsx";
+import { useStored, intIn, oneOf } from "../storage.js";
 
 
 // ══════════════════════════════════════════════════════
 //  ③ 스케일 (도수 / 음이름 토글)
 // ══════════════════════════════════════════════════════
-export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, path }) {
-  const W = 272, FRETS = 15;
+export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, path, maxFret }) {
+  // 3음/줄 포지션은 16~17프렛까지 올라가는 경우가 있다. 예전에는 15프렛까지만 그려서
+  // 그 음들이 화면에서 잘려 보이지 않았다 → 필요한 만큼 지판을 늘려 그린다.
+  const W = 272, FRETS = Math.max(15, Math.min(17, maxFret || 15));
   const padL = 30, padR = 18, padTop = 42, padBot = 16;
   const xOf = (i) => padL + i * ((W - padL - padR) / 5);
   const nutY = padTop, fretGap = 33;
@@ -47,7 +50,7 @@ export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, pat
       {Array.from({ length: FRETS }, (_, k) => k + 1).map((n) => (
         <line key={n} x1={padL - 8} y1={fretY(n)} x2={W - padR + 8} y2={fretY(n)} stroke={C.fretwire} strokeWidth="1.6" />
       ))}
-      {[3, 5, 7, 9, 15].map((n) => <circle key={"in" + n} cx={midX} cy={dotY(n)} r="3.2" fill={C.muted} fillOpacity="0.5" />)}
+      {[3, 5, 7, 9, 15, 17].filter((n) => n <= FRETS).map((n) => <circle key={"in" + n} cx={midX} cy={dotY(n)} r="3.2" fill={C.muted} fillOpacity="0.5" />)}
       <circle cx={midX - 9} cy={dotY(12)} r="3.2" fill={C.muted} fillOpacity="0.5" />
       <circle cx={midX + 9} cy={dotY(12)} r="3.2" fill={C.muted} fillOpacity="0.5" />
       {Array.from({ length: FRETS }, (_, k) => k + 1).map((n) => (
@@ -93,7 +96,7 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
       ? { ok: false, text: `${warn[0].chord}만 주의 — ${warn[0].miss.map((pc) => noteName(keyPC, pc)).join(", ")} 없음` }
       : { ok: false, text: "둘이 안 맞음 — 한쪽을 맞춰보세요" };
   const colStyle = { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5 };
-  const capStyle = { fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.12em", color: C.dim, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 5 };
+  const capStyle = { fontFamily: "ui-monospace, monospace", fontSize: 11.5, letterSpacing: "0.1em", color: C.dim, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 5 };
   const btnStyle = (col) => ({ cursor: "pointer", borderRadius: 999, padding: "4px 10px", fontSize: 11, fontWeight: 700, background: "transparent", color: col, border: `1px solid ${col}`, whiteSpace: "nowrap", alignSelf: "flex-start" });
   return (
     <div style={{ background: C.panel, borderRadius: 12, padding: "11px 12px", marginBottom: 12 }}>
@@ -120,7 +123,7 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
       <div style={{ marginTop: 9 }}>
         <span style={{ display: "inline-block", fontSize: 11, borderRadius: 6, padding: "3px 8px", background: status.ok ? C.tealBg : C.roseBg, color: status.ok ? C.tealText : C.roseText }}>{status.text}</span>
       </div>
-      <button onClick={() => setOpen((o) => !o)} style={{ marginTop: 8, cursor: "pointer", border: "none", background: "transparent", color: C.dim, fontSize: 11.5, padding: 0 }}>
+      <button onClick={() => setOpen((o) => !o)} aria-expanded={open} style={{ marginTop: 8, cursor: "pointer", border: "none", background: "transparent", color: C.dim, fontSize: 12, padding: 0 }}>
         {open ? "▾" : "▸"} 코드별 스케일 보기
       </button>
       {open && (
@@ -133,12 +136,12 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
                   style={{ cursor: "pointer", borderRadius: 8, padding: "4px 9px", fontSize: 12, fontWeight: on ? 800 : 600, background: on ? C.hub : "transparent", color: on ? C.brass : C.text, border: `1px solid ${on ? C.brass : "transparent"}`, whiteSpace: "nowrap" }}>
                   {c.chord} → {ROOTS[c.root]} {SCALES[c.sc].name}
                 </button>
-                {c.miss.length > 0 && <span style={{ fontSize: 10.5, color: C.roseText }}>{c.miss.map((pc) => noteName(keyPC, pc)).join(", ")} 없음</span>}
+                {c.miss.length > 0 && <span style={{ fontSize: 11.5, color: C.roseText }}>{c.miss.map((pc) => noteName(keyPC, pc)).join(", ")} 없음</span>}
               </div>
             );
           })}
           {chordInfo.some((c) => c.note) && (
-            <div style={{ fontSize: 10.5, color: C.dim, marginTop: 2, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 11.5, color: C.dim, marginTop: 2, lineHeight: 1.5 }}>
               {chordInfo.filter((c) => c.note).map((c, i) => <div key={i}>· {c.chord}: {c.note}</div>)}
             </div>
           )}
@@ -150,10 +153,11 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
 
 export function Scales() {
   const jam = useJam();
-  const [root, setRoot] = useState(9); // A
-  const [sc, setSc] = useState(3);     // 마이너 펜타토닉
-  const [labelMode, setLabelMode] = useState("deg");
-  const [view, setView] = useState("all");
+  // 앱을 껐다 켜도 마지막에 보던 스케일·보기 방식이 그대로 뜬다
+  const [root, setRoot] = useStored("scale.root", 9, intIn(0, ROOTS.length - 1)); // A
+  const [sc, setSc] = useStored("scale.index", 3, intIn(0, SCALES.length - 1));   // 마이너 펜타토닉
+  const [labelMode, setLabelMode] = useStored("scale.label", "deg", oneOf(["deg", "note"]));
+  const [view, setView] = useStored("scale.view", "all", oneOf(["all", "box", "nps", "diag"]));
   const [posIdx, setPosIdx] = useState(0);
   const scale = SCALES[sc];
   const jamBest = (() => {
@@ -215,6 +219,10 @@ export function Scales() {
   const diagSeq = effView === "diag" && positions[pIdx] ? positions[pIdx].seq : null;
   const diagPath = diagSeq ? diagSeq.map((x) => x.key) : null;
   const only = effView === "nps" ? build3nps(root, ivset, boxStart) : effView === "diag" ? new Set(diagPath) : null;
+  // 이 포지션이 몇 프렛까지 쓰는지 → 지판을 그만큼 늘려 그린다 (고프렛 잘림 방지)
+  const neededFret = only && only.size
+    ? Math.max(...[...only].map((k) => +k.split("-")[1]))
+    : effView === "box" ? boxStart + 4 : 15;
 
   const playBox = () => {
     const midis = [];
@@ -239,42 +247,40 @@ export function Scales() {
 
       <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
         <div style={{ flex: "0 0 27%", minWidth: 0 }}>
-          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.16em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>루트</div>
-          <VWheel items={ROOTS} value={root} onChange={(i) => { setRoot(i); setPosIdx(0); }} size={17} />
+          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>루트</div>
+          <VWheel label="스케일 루트" items={ROOTS} value={root} onChange={(i) => { setRoot(i); setPosIdx(0); }} size={17} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.16em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>스케일</div>
-          <VWheel items={SCALES.map((s) => s.name)} value={sc} onChange={(i) => { setSc(i); setPosIdx(0); }} size={14} />
+          <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 5, textAlign: "center" }}>스케일</div>
+          <VWheel label="스케일 종류" items={SCALES.map((s) => s.name)} value={sc} onChange={(i) => { setSc(i); setPosIdx(0); }} size={14} />
         </div>
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 12, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.18em", color: C.muted, textTransform: "uppercase" }}>표시</span>
-          <div style={{ display: "inline-flex", background: C.panel, borderRadius: 999, padding: 2 }}>
-            {[["deg", "도수"], ["note", "음이름"]].map(([m, lbl]) => (
-              <button key={m} onClick={() => setLabelMode(m)} style={{ padding: "5px 13px", borderRadius: 999, cursor: "pointer", fontSize: 12, fontWeight: 700, border: "none", background: labelMode === m ? C.brass : "transparent", color: labelMode === m ? C.bg : C.muted }}>{lbl}</button>
-            ))}
-          </div>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 10, letterSpacing: "0.18em", color: C.muted, textTransform: "uppercase" }}>보기</span>
-          <div style={{ display: "inline-flex", background: C.panel, borderRadius: 999, padding: 2 }}>
-            {[["all", "전체"], ["box", "포지션"], ...(is7 ? [["nps", "3음/줄"]] : []), ["diag", "대각선"]].map(([m, lbl]) => (
-              <button key={m} onClick={() => { setView(m); setPosIdx(0); }} style={{ padding: "5px 13px", borderRadius: 999, cursor: "pointer", fontSize: 12, fontWeight: 700, border: "none", background: effView === m ? C.brass : "transparent", color: effView === m ? C.bg : C.muted }}>{lbl}</button>
-            ))}
-          </div>
+      {/* 보기 4종은 한 줄을 통째로 써서 폭을 고르게 — 예전엔 '표시'와 한 줄에 끼어 빽빽했다 */}
+      <div style={{ display: "flex", background: C.panel, borderRadius: 999, padding: 3, marginBottom: 8 }}
+        role="group" aria-label="지판 보기 방식">
+        {[["all", "전체"], ["box", "포지션"], ...(is7 ? [["nps", "3음/줄"]] : []), ["diag", "대각선"]].map(([m, lbl]) => (
+          <button key={m} onClick={() => { setView(m); setPosIdx(0); }} aria-pressed={effView === m}
+            style={{ flex: 1, padding: "7px 4px", borderRadius: 999, cursor: "pointer", fontSize: 12.5, fontWeight: 700, border: "none", background: effView === m ? C.brass : "transparent", color: effView === m ? C.bg : C.muted, whiteSpace: "nowrap" }}>{lbl}</button>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+        <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase" }}>표시</span>
+        <div style={{ display: "inline-flex", background: C.panel, borderRadius: 999, padding: 2 }} role="group" aria-label="음 표시 방식">
+          {[["deg", "도수"], ["note", "음이름"]].map(([m, lbl]) => (
+            <button key={m} onClick={() => setLabelMode(m)} aria-pressed={labelMode === m} style={{ padding: "5px 13px", borderRadius: 999, cursor: "pointer", fontSize: 12.5, fontWeight: 700, border: "none", background: labelMode === m ? C.brass : "transparent", color: labelMode === m ? C.bg : C.muted }}>{lbl}</button>
+          ))}
         </div>
       </div>
 
       {positions.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, marginBottom: 12 }}>
-          <button onClick={() => setPosIdx(Math.max(0, pIdx - 1))} disabled={pIdx <= 0} style={{ width: 40, height: 36, borderRadius: 9, cursor: pIdx <= 0 ? "default" : "pointer", border: `1px solid ${C.ring}`, background: C.panel, color: pIdx <= 0 ? C.ring : C.text, fontSize: 15 }}>◀</button>
+          <button onClick={() => setPosIdx(Math.max(0, pIdx - 1))} disabled={pIdx <= 0} aria-label="이전 포지션" style={{ width: 40, height: 36, borderRadius: 9, cursor: pIdx <= 0 ? "default" : "pointer", border: `1px solid ${C.ring}`, background: C.panel, color: pIdx <= 0 ? C.ring : C.text, fontSize: 15 }}>◀</button>
           <div style={{ textAlign: "center", minWidth: 150 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: C.brass }}>{boxLabel ? boxLabel + " · " : ""}포지션 {pIdx + 1} / {positions.length}</div>
             <div style={{ fontSize: 11.5, color: C.muted }}>{(() => { if (only && only.size) { const fr = [...only].map((k) => +k.split("-")[1]); return Math.min(...fr) + "~" + Math.max(...fr) + " 프렛"; } return boxStart + "~" + (boxStart + 4) + " 프렛"; })()}</div>
           </div>
-          <button onClick={() => setPosIdx(Math.min(positions.length - 1, pIdx + 1))} disabled={pIdx >= positions.length - 1} style={{ width: 40, height: 36, borderRadius: 9, cursor: pIdx >= positions.length - 1 ? "default" : "pointer", border: `1px solid ${C.ring}`, background: C.panel, color: pIdx >= positions.length - 1 ? C.ring : C.text, fontSize: 15 }}>▶</button>
+          <button onClick={() => setPosIdx(Math.min(positions.length - 1, pIdx + 1))} disabled={pIdx >= positions.length - 1} aria-label="다음 포지션" style={{ width: 40, height: 36, borderRadius: 9, cursor: pIdx >= positions.length - 1 ? "default" : "pointer", border: `1px solid ${C.ring}`, background: C.panel, color: pIdx >= positions.length - 1 ? C.ring : C.text, fontSize: 15 }}>▶</button>
         </div>
       )}
 
@@ -285,10 +291,10 @@ export function Scales() {
       )}
 
       <div style={{ background: C.panel, borderRadius: 14, padding: "14px 8px 10px" }}>
-        <ScaleBoard rootPC={root} scale={scale} labelMode={labelMode} mode={effView} boxStart={boxStart} only={only} path={effView === "diag" ? diagPath : null} />
+        <ScaleBoard rootPC={root} scale={scale} labelMode={labelMode} mode={effView} boxStart={boxStart} only={only} path={effView === "diag" ? diagPath : null} maxFret={neededFret} />
         <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-          <button onClick={playScale} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 700, background: "transparent", color: C.brass, border: `1px solid ${C.brass}` }}>▶ 스케일 듣기</button>
-          {effView !== "all" && <button onClick={playBox} style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 700, background: "transparent", color: C.brass, border: `1px solid ${C.brass}` }}>▶ {effView === "nps" ? "포지션" : effView === "diag" ? "대각선" : "박스"} 듣기</button>}
+          <button onClick={playScale} aria-label="스케일 소리 듣기" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 700, background: "transparent", color: C.brass, border: `1px solid ${C.brass}` }}>▶ 스케일 듣기</button>
+          {effView !== "all" && <button onClick={playBox} aria-label="이 포지션 소리 듣기" style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5, fontWeight: 700, background: "transparent", color: C.brass, border: `1px solid ${C.brass}` }}>▶ {effView === "nps" ? "포지션" : effView === "diag" ? "대각선" : "박스"} 듣기</button>}
         </div>
         <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 10, flexWrap: "wrap", fontSize: 11.5, color: C.muted }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 13, height: 13, borderRadius: 999, background: C.brass, display: "inline-block" }} />루트</span>
@@ -296,7 +302,7 @@ export function Scales() {
         </div>
       </div>
       <div style={{ textAlign: "center", fontSize: 11.5, color: C.muted, marginTop: 12 }}>
-        왼쪽이 저음(6번 줄) · 위가 너트 · 0~12프렛
+        왼쪽이 저음(6번 줄) · 위가 너트
       </div>
     </Screen>
   );
