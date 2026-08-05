@@ -32,6 +32,10 @@ export const ADDED_IN_MIGRATION = [
   "JamVoicing", "voiceProgressionFull",
   // 첫 실행 코치마크
   "CoachMarks", "FLAG",
+
+  // ── Phase 3 (디자인 패스 2차) ──
+  // 디자인 척도 상수 (src/theme.js)
+  "FS", "FS_DISPLAY", "SP", "SP_HAIR", "ACTION", "ACTION_ON",
 ];
 
 // 줄 맨 앞의 export / export default / async 를 걷어내고 순수한 선언만 남긴다

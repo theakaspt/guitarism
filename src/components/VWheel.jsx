@@ -66,7 +66,7 @@ export function VWheel({ items, value, onChange, size = 15, label }) {
           return (
             <div key={i} id={optId(i)} role="option" aria-selected={i === value}
               ref={(el) => (itemRefs.current[i] = el)} onClick={() => centerTo(i, true)}
-              style={{ height: ROW, display: "flex", alignItems: "center", justifyContent: "center", scrollSnapAlign: "center", cursor: "pointer", whiteSpace: "nowrap", padding: "0 6px", textAlign: "center",
+              style={{ height: ROW, display: "flex", alignItems: "center", justifyContent: "center", scrollSnapAlign: "center", cursor: "pointer", whiteSpace: "nowrap", padding: "0 8px", textAlign: "center",
                 color: on ? C.brass : C.muted, fontWeight: on ? 800 : 600, fontSize: on ? size : Math.max(11, size - 2), opacity: on ? 1 : 0.45, transition: "color .12s, opacity .12s" }}>{label}</div>
           );
         })}

@@ -35,7 +35,7 @@ export default class ErrorBoundary extends React.Component {
       return <React.Fragment key={this.state.tries}>{this.props.children}</React.Fragment>;
     }
     const btn = (main) => ({
-      padding: "9px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13.5,
+      padding: "8px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13,
       fontWeight: main ? 800 : 600,
       background: main ? C.brass : "transparent",
       color: main ? C.bg : C.muted,
@@ -45,7 +45,7 @@ export default class ErrorBoundary extends React.Component {
       <div style={{
         background: C.bg, color: C.text, minHeight: 260, padding: "40px 20px",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        gap: 14, textAlign: "center", boxSizing: "border-box",
+        gap: 16, textAlign: "center", boxSizing: "border-box",
         fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif",
       }}>
         <div style={{ fontSize: 19, fontWeight: 800 }}>문제가 생겼어요</div>
@@ -53,11 +53,11 @@ export default class ErrorBoundary extends React.Component {
           {this.props.label ? `${this.props.label} 화면을 그리다가 멈췄습니다.` : "화면을 그리다가 멈췄습니다."}
           <br />다시 시작하면 대부분 정상으로 돌아옵니다.
         </div>
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap", justifyContent: "center", marginTop: 4 }}>
+        <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center", marginTop: 4 }}>
           <button onClick={this.restart} style={btn(true)}>다시 시작</button>
           <button onClick={this.restartClean} style={btn(false)}>설정까지 초기화</button>
         </div>
-        <div style={{ fontSize: 11, color: C.dim, marginTop: 6, maxWidth: 300, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: C.dim, marginTop: 8, maxWidth: 300, lineHeight: 1.5 }}>
           계속 같은 자리에서 멈추면 "설정까지 초기화"를 눌러 보세요.
           저장된 값이 꼬였을 때 해결됩니다.
         </div>

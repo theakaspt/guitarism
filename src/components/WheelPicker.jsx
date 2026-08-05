@@ -57,7 +57,7 @@ export function WheelPicker({ items, value, onChange, big, label }) {
           return (
             <div key={i} id={optId(i)} role="option" aria-selected={i === value}
               ref={(el) => (itemRefs.current[i] = el)} onClick={() => centerTo(i, true)}
-              style={{ scrollSnapAlign: "center", flex: "0 0 auto", padding: "9px 14px", cursor: "pointer", whiteSpace: "nowrap", color: on ? C.brass : C.muted, fontWeight: on ? 800 : 600, fontSize: on ? (big ? 18 : 16) : Math.max(11, 14), opacity: on ? 1 : 0.5, transition: "color .12s, opacity .12s" }}>{label}</div>
+              style={{ scrollSnapAlign: "center", flex: "0 0 auto", padding: "8px 16px", cursor: "pointer", whiteSpace: "nowrap", color: on ? C.brass : C.muted, fontWeight: on ? 800 : 600, fontSize: on ? (big ? 18 : 16) : Math.max(11, 14), opacity: on ? 1 : 0.5, transition: "color .12s, opacity .12s" }}>{label}</div>
           );
         })}
         <div style={{ flex: "0 0 44%" }} />

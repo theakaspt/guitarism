@@ -33,10 +33,10 @@ export function TabBar({ tab, setTab }) {
         return (
           <button key={id} onClick={() => setTab(id)}
             role="tab" id={`tab-${id}`} aria-selected={on} aria-controls={`panel-${id}`}
-            tabIndex={on ? 0 : -1} style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 3, color: on ? C.brass : C.muted, position: "relative", padding: 0 }}>
+            tabIndex={on ? 0 : -1} style={{ flex: 1, border: "none", background: "transparent", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4, color: on ? C.brass : C.muted, position: "relative", padding: 0 }}>
             {on && <span aria-hidden="true" style={{ position: "absolute", top: 0, width: 26, height: 2.5, background: C.brass, borderRadius: 2 }} />}
             <Icon />
-            <span style={{ fontSize: 12, fontWeight: on ? 700 : 500 }}>{label}</span>
+            <span style={{ fontSize: 13, fontWeight: on ? 700 : 500 }}>{label}</span>
           </button>
         );
       })}

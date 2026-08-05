@@ -14,10 +14,10 @@ export default function UpdateToast() {
   });
   if (!needRefresh) return null;
   return (
-    <div style={{ position: "fixed", left: 12, right: 12, bottom: 118, zIndex: 70, background: C.panel, border: `1px solid ${C.brass}`, borderRadius: 12, padding: "11px 13px", display: "flex", alignItems: "center", gap: 10, maxWidth: 416, margin: "0 auto", boxSizing: "border-box", fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
+    <div style={{ position: "fixed", left: 12, right: 12, bottom: 118, zIndex: 70, background: C.panel, border: `1px solid ${C.brass}`, borderRadius: 12, padding: "12px 12px", display: "flex", alignItems: "center", gap: 12, maxWidth: 416, margin: "0 auto", boxSizing: "border-box", fontFamily: "ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
       <span style={{ fontSize: 13, color: C.text, flex: 1 }}>새 버전이 준비됐어요</span>
-      <button onClick={() => updateServiceWorker(true)} style={{ padding: "6px 14px", borderRadius: 999, cursor: "pointer", fontSize: 12.5, fontWeight: 800, background: C.brass, color: C.bg, border: "none" }}>새로고침</button>
-      <button onClick={() => setNeedRefresh(false)} style={{ padding: "6px 8px", borderRadius: 999, cursor: "pointer", fontSize: 12.5, fontWeight: 600, background: "transparent", color: C.muted, border: "none" }}>나중에</button>
+      <button onClick={() => updateServiceWorker(true)} style={{ padding: "8px 16px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 800, background: C.brass, color: C.bg, border: "none" }}>새로고침</button>
+      <button onClick={() => setNeedRefresh(false)} style={{ padding: "8px 8px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 600, background: "transparent", color: C.muted, border: "none" }}>나중에</button>
     </div>
   );
 }

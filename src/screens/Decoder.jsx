@@ -114,7 +114,7 @@ export function Decoder() {
   return (
     <Screen>
       <div style={{ textAlign: "center", marginBottom: 2 }}>
-        <div style={{ fontSize: 12.5, color: C.dim }}>다이얼을 돌려 키를 맞추세요</div>
+        <div style={{ fontSize: 13, color: C.dim }}>다이얼을 돌려 키를 맞추세요</div>
       </div>
       {/* 스크린리더에 지금 키를 알려 준다 (다이얼은 그림이라 읽히지 않는다) */}
       <div aria-live="polite" style={{ position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)", whiteSpace: "nowrap" }}>
@@ -150,79 +150,79 @@ export function Decoder() {
           <polygon points={`${CX - 11},14 ${CX + 11},14 ${CX},34`} fill={C.brass} />
         </svg>
       </div>
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <SectionLabel>다이어토닉 코드</SectionLabel>
           <div style={{ ...SEG, marginLeft: "auto" }}>
             {[["maj", "메이저"], ["min", key.rel]].map(([id, label]) => {
               const on = diaMode === id;
-              return (<button key={id} onClick={() => setDiaMode(id)} aria-pressed={on} style={{ border: "none", cursor: "pointer", borderRadius: 999, padding: "4px 11px", fontSize: 11.5, fontWeight: on ? 800 : 600, background: on ? C.brass : "transparent", color: on ? C.bg : C.muted }}>{label}</button>);
+              return (<button key={id} onClick={() => setDiaMode(id)} aria-pressed={on} style={{ border: "none", cursor: "pointer", borderRadius: 999, padding: "4px 12px", fontSize: 11, fontWeight: on ? 800 : 600, background: on ? C.brass : "transparent", color: on ? C.bg : C.muted }}>{label}</button>);
             })}
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 6, marginTop: 8 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 8, marginTop: 8 }}>
           {diaChords.map(([num, name, q], idx) => (
-            <div key={idx} style={{ background: C.panel, borderTop: `3px solid ${QCOLOR[q]}`, borderRadius: 8, padding: "8px 2px 9px", textAlign: "center", minWidth: 0 }}>
-              <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, color: C.muted }}>{num}</div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: QCOLOR[q], marginTop: 3, whiteSpace: "nowrap" }}>{name}</div>
+            <div key={idx} style={{ background: C.panel, borderTop: `3px solid ${QCOLOR[q]}`, borderRadius: 8, padding: "8px 2px 8px", textAlign: "center", minWidth: 0 }}>
+              <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, color: C.muted }}>{num}</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: QCOLOR[q], marginTop: 4, whiteSpace: "nowrap" }}>{name}</div>
             </div>
           ))}
         </div>
         <div style={{ textAlign: "center", fontSize: 11, color: C.muted, marginTop: 8 }}>
           {diaMode === "min" ? `같은 코드들, 중심만 ${key.rel}로 옮긴 순서 (나란한조)` : "메이저 키 기준 순서"}
         </div>
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", marginTop: 10, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 16, justifyContent: "center", marginTop: 12, flexWrap: "wrap" }}>
           {["maj", "min", "dim"].map((q) => (
-            <span key={q} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11.5, color: C.muted }}>
+            <span key={q} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 11, color: C.muted }}>
               <span style={{ width: 10, height: 10, borderRadius: 3, background: QCOLOR[q], display: "inline-block" }} />{QLABEL[q]}
             </span>
           ))}
         </div>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginTop: 16 }}>
         <InfoCard label="조표 (Key Signature)" value={sigText} />
         <InfoCard label="나란한조 (Relative minor)" value={key.rel} accent={C.teal} />
       </div>
       <div style={{ marginTop: 16 }}>
         <button onClick={() => setProgOpen((o) => !o)} aria-expanded={progOpen}
-          style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, background: C.panel, border: `1px solid ${progOpen ? C.brass : "transparent"}`, borderRadius: 10, padding: "13px 14px", cursor: "pointer", textAlign: "left", boxSizing: "border-box" }}>
+          style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, background: C.panel, border: `1px solid ${progOpen ? C.brass : "transparent"}`, borderRadius: 10, padding: "12px 16px", cursor: "pointer", textAlign: "left", boxSizing: "border-box" }}>
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase" }}>추천 코드 진행</div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: progOpen ? C.brass : C.text, marginTop: 3 }}>{PROGRESSIONS.length}개 진행 {progOpen ? "닫기" : "보기"}</div>
+            <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase" }}>추천 코드 진행</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: progOpen ? C.brass : C.text, marginTop: 4 }}>{PROGRESSIONS.length}개 진행 {progOpen ? "닫기" : "보기"}</div>
           </div>
-          <span aria-hidden="true" style={{ marginLeft: "auto", color: progOpen ? C.brass : C.muted, fontSize: 14, transform: progOpen ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }}>▾</span>
+          <span aria-hidden="true" style={{ marginLeft: "auto", color: progOpen ? C.brass : C.muted, fontSize: 15, transform: progOpen ? "rotate(180deg)" : "none", transition: "transform .2s", flexShrink: 0 }}>▾</span>
         </button>
         {progOpen && (<>
-        <div style={{ fontSize: 11.5, color: C.muted, marginTop: 8 }}>카드를 누르면 이어가기 좋은 진행이 펼쳐집니다</div>
+        <div style={{ fontSize: 11, color: C.muted, marginTop: 8 }}>카드를 누르면 이어가기 좋은 진행이 펼쳐집니다</div>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
           {PROGRESSIONS.map((p, pi) => {
             const open = openProg === pi;
             return (
               <div key={pi} style={{ background: C.panel, border: `1px solid ${open ? C.brass : "transparent"}`, borderRadius: 10, overflow: "hidden" }}>
-                <div onClick={() => setOpenProg(open ? null : pi)} style={{ padding: "10px 13px", cursor: "pointer" }}>
+                <div onClick={() => setOpenProg(open ? null : pi)} style={{ padding: "12px 12px", cursor: "pointer" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                     <div style={{ minWidth: 0 }}><ProgRow deg={p.deg} keyData={key} big /></div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 1 }}>
-                      <button onClick={(e) => { e.stopPropagation(); playProgression(p.deg); }} aria-label="이 진행 소리 듣기" title="진행 듣기" style={{ width: 30, height: 30, borderRadius: 999, cursor: "pointer", border: `1px solid ${C.brass}`, background: "transparent", color: C.brass, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 0 }}>▶</button>
-                      <span style={{ color: open ? C.brass : C.muted, fontSize: 12, display: "inline-block", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▾</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 1 }}>
+                      <button onClick={(e) => { e.stopPropagation(); playProgression(p.deg); }} aria-label="이 진행 소리 듣기" title="진행 듣기" style={{ width: 30, height: 30, borderRadius: 999, cursor: "pointer", border: `1px solid ${C.ring}`, background: C.hub, color: C.text, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 0 }}>▶</button>
+                      <span style={{ color: open ? C.brass : C.muted, fontSize: 13, display: "inline-block", transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}>▾</span>
                     </div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                    <span style={{ fontSize: 12.5, color: C.text, opacity: 0.85 }}>{p.mood}</span>
-                    <span style={{ fontSize: 11, color: C.muted, fontFamily: "ui-monospace, monospace", letterSpacing: "0.04em", borderRadius: 999, padding: "2px 10px", whiteSpace: "nowrap" }}>{p.genre}</span>
+                    <span style={{ fontSize: 13, color: C.text, opacity: 0.85 }}>{p.mood}</span>
+                    <span style={{ fontSize: 11, color: C.muted, fontFamily: "ui-monospace, monospace", letterSpacing: "0.04em", borderRadius: 999, padding: "2px 12px", whiteSpace: "nowrap" }}>{p.genre}</span>
                   </div>
                 </div>
                 {open && (
-                  <div style={{ background: C.bg, padding: "10px 13px 12px" }}>
-                    <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 12, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 9 }}>이어가기 좋은 진행</div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
+                  <div style={{ background: C.bg, padding: "12px 12px 12px" }}>
+                    <div style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase", marginBottom: 8 }}>이어가기 좋은 진행</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                       {p.next.map((nx, ni) => (
                         <div key={ni} style={{ borderLeft: `2px solid ${C.brass}`, paddingLeft: 11 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                             <div style={{ minWidth: 0 }}><ProgRow deg={nx.deg} keyData={key} /></div>
-                            <button onClick={(e) => { e.stopPropagation(); playProgression(nx.deg); }} aria-label="이 진행 소리 듣기" title="진행 듣기" style={{ width: 26, height: 26, borderRadius: 999, cursor: "pointer", border: `1px solid ${C.brass}`, background: "transparent", color: C.brass, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 0 }}>▶</button>
+                            <button onClick={(e) => { e.stopPropagation(); playProgression(nx.deg); }} aria-label="이 진행 소리 듣기" title="진행 듣기" style={{ width: 26, height: 26, borderRadius: 999, cursor: "pointer", border: `1px solid ${C.ring}`, background: C.hub, color: C.text, fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, padding: 0 }}>▶</button>
                           </div>
-                          <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{nx.note}</div>
+                          <div style={{ fontSize: 13, color: C.muted, marginTop: 4 }}>{nx.note}</div>
                         </div>
                       ))}
                     </div>
