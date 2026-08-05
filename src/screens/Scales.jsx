@@ -7,13 +7,14 @@ import { melody } from "../audio/play.js";
 import { useJam } from "../jam/JamProvider.jsx";
 import Screen from "../components/Screen.jsx";
 import VWheel from "../components/VWheel.jsx";
+import TipCard from "../components/TipCard.jsx";
 import { useStored, intIn, oneOf } from "../storage.js";
 
 
 // ══════════════════════════════════════════════════════
 //  ③ 스케일 (도수 / 음이름 토글)
 // ══════════════════════════════════════════════════════
-export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, path, maxFret }) {
+export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, path, maxFret, chordTones }) {
   // 3음/줄 포지션은 16~17프렛까지 올라가는 경우가 있다. 예전에는 15프렛까지만 그려서
   // 그 음들이 화면에서 잘려 보이지 않았다 → 필요한 만큼 지판을 늘려 그린다.
   const W = 272, FRETS = Math.max(15, Math.min(17, maxFret || 15));
@@ -35,7 +36,9 @@ export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, pat
       if (mode === "box" && (f < boxStart || f > boxStart + 4)) continue;
       if (only && !only.has(i + "-" + f)) continue;
       const label = labelMode === "note" ? noteName(rootPC, pc) : map[iv];
-      dots.push({ x: xOf(i), y: f === 0 ? openY : dotY(f), label, isRoot: iv === 0, key: i + "-" + f });
+      // 코드톤 타겟 뷰: 지금 울리는 코드의 구성음이면 표시를 바꾼다
+      const ct = chordTones ? chordTones.get(pc) : undefined; // "guide" | "tone" | undefined
+      dots.push({ x: xOf(i), y: f === 0 ? openY : dotY(f), label, isRoot: iv === 0, key: i + "-" + f, ct });
     }
   }
 
@@ -64,12 +67,28 @@ export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, pat
         <polyline fill="none" stroke={C.brass} strokeWidth="1.6" strokeOpacity="0.6" strokeDasharray="4 3"
           points={path.map((k) => { const [i, f] = k.split("-").map(Number); return xOf(i) + "," + (f === 0 ? openY : dotY(f)); }).join(" ")} />
       )}
-      {dots.map((d) => (
-        <g key={d.key}>
-          <circle cx={d.x} cy={d.y} r="11" fill={d.isRoot ? C.brass : C.hub} stroke={d.isRoot ? C.brass : C.teal} strokeWidth="1.5" />
-          <text x={d.x} y={d.y} textAnchor="middle" dominantBaseline="central" fontSize={d.label.length > 1 ? 8.5 : 9.5} fontWeight="800" fill={d.isRoot ? C.bg : C.teal}>{d.label}</text>
-        </g>
-      ))}
+      {dots.map((d) => {
+        // 코드톤 타겟 뷰의 시각 언어
+        //  · 가이드톤(3·7음) : 이중 테두리 + 밝은 채움 — "지금 노려야 할 음"
+        //  · 그 밖 코드톤    : 채움 강조
+        //  · 코드톤 아님     : 흐리게 (스케일 학습 화면이라 지우지는 않는다)
+        const dim = chordTones && !d.ct;
+        const fill = d.isRoot ? C.brass : d.ct === "guide" ? C.tealBg : d.ct === "tone" ? C.hub : C.hub;
+        const stroke = d.isRoot ? C.brass : d.ct ? C.teal : C.teal;
+        const textFill = d.isRoot ? C.bg : d.ct === "guide" ? C.tealText : C.teal;
+        return (
+          <g key={d.key} opacity={dim ? 0.3 : 1}>
+            {d.ct === "guide" && !d.isRoot && (
+              <circle cx={d.x} cy={d.y} r="14" fill="none" stroke={C.teal} strokeWidth="1.2" strokeOpacity="0.85" />
+            )}
+            {d.ct === "guide" && d.isRoot && (
+              <circle cx={d.x} cy={d.y} r="14" fill="none" stroke={C.brass} strokeWidth="1.2" strokeOpacity="0.85" />
+            )}
+            <circle cx={d.x} cy={d.y} r="11" fill={fill} stroke={stroke} strokeWidth={d.ct ? 2 : 1.5} />
+            <text x={d.x} y={d.y} textAnchor="middle" dominantBaseline="central" fontSize={d.label.length > 1 ? 8.5 : 9.5} fontWeight="800" fill={textFill}>{d.label}</text>
+          </g>
+        );
+      })}
     </svg>
   );
 }
@@ -158,6 +177,7 @@ export function Scales() {
   const [sc, setSc] = useStored("scale.index", 3, intIn(0, SCALES.length - 1));   // 마이너 펜타토닉
   const [labelMode, setLabelMode] = useStored("scale.label", "deg", oneOf(["deg", "note"]));
   const [view, setView] = useStored("scale.view", "all", oneOf(["all", "box", "nps", "diag"]));
+  const [target, setTarget] = useStored("scale.target", true, (v) => (typeof v === "boolean" ? v : undefined));
   const [posIdx, setPosIdx] = useState(0);
   const scale = SCALES[sc];
   const jamBest = (() => {
@@ -175,6 +195,31 @@ export function Scales() {
     if (b.keyIdx === jam.keyIdx && b.formIdx === jam.form) return null;
     return b;
   })();
+  // ── 코드톤 타겟 뷰 (Phase B) ──
+  // 잼이 돌 때, 지금 울리는 코드의 구성음을 지판 위에 표시한다.
+  // 코드가 바뀔 때만 다시 계산된다 (nowChord 재사용 — 절대 규칙 7)
+  const chordTones = (() => {
+    if (!target || !jam.playing) return null;
+    const form = JAM_FORMS[jam.form];
+    const ch = form.chords[Math.min(jam.nowChord || 0, form.chords.length - 1)];
+    if (!ch) return null;
+    const cr = (KEY_PC[jam.keyIdx] + ch.deg) % 12;
+    const ivs = FORMULA[ch.type];
+    const m = new Map();
+    ivs.forEach((iv, i) => {
+      // 4음 코드는 [루트, 3음, 5음, 7음] — 1번과 3번이 가이드톤
+      m.set((cr + iv) % 12, i === 1 || i === 3 ? "guide" : "tone");
+    });
+    return m;
+  })();
+  const nowChordName = (() => {
+    if (!chordTones) return null;
+    const form = JAM_FORMS[jam.form];
+    const ch = form.chords[Math.min(jam.nowChord || 0, form.chords.length - 1)];
+    const keyPc = KEY_PC[jam.keyIdx];
+    return ch ? `${noteName(keyPc, (keyPc + ch.deg) % 12)}${JAM_SYM[ch.type]}` : null;
+  })();
+
   const ivset = new Set(scale.notes.map((n) => n.iv));
   const is7 = scale.notes.length === 7;
   const effView = (view === "nps" && !is7) ? "all" : view;
@@ -264,13 +309,25 @@ export function Scales() {
             style={{ flex: 1, padding: "8px 4px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 700, border: "none", background: effView === m ? C.brass : "transparent", color: effView === m ? C.bg : C.muted, whiteSpace: "nowrap" }}>{lbl}</button>
         ))}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12, flexWrap: "wrap" }}>
         <span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, letterSpacing: "0.12em", color: C.muted, textTransform: "uppercase" }}>표시</span>
         <div style={{ display: "inline-flex", background: C.panel, borderRadius: 999, padding: 2 }} role="group" aria-label="음 표시 방식">
           {[["deg", "도수"], ["note", "음이름"]].map(([m, lbl]) => (
             <button key={m} onClick={() => setLabelMode(m)} aria-pressed={labelMode === m} style={{ padding: "4px 12px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 700, border: "none", background: labelMode === m ? C.brass : "transparent", color: labelMode === m ? C.bg : C.muted }}>{lbl}</button>
           ))}
         </div>
+        {/* 코드톤 타겟 뷰 켜고 끄기 — 잼이 돌 때만 효과가 있다 */}
+        <button
+          onClick={() => setTarget(!target)}
+          role="switch" aria-checked={target} aria-label="코드톤 강조"
+          style={{
+            marginLeft: "auto", padding: "4px 12px", borderRadius: 999, cursor: "pointer",
+            fontSize: 13, fontWeight: 700, border: `1px solid ${target ? C.teal : C.ring}`,
+            background: target ? C.tealBg : "transparent", color: target ? C.tealText : C.muted,
+          }}
+        >
+          코드톤 강조 {target ? "켬" : "끔"}
+        </button>
       </div>
 
       {positions.length > 0 && (
@@ -291,19 +348,31 @@ export function Scales() {
       )}
 
       <div style={{ background: C.panel, borderRadius: 14, padding: "16px 8px 12px" }}>
-        <ScaleBoard rootPC={root} scale={scale} labelMode={labelMode} mode={effView} boxStart={boxStart} only={only} path={effView === "diag" ? diagPath : null} maxFret={neededFret} />
+        {chordTones && (
+          <div aria-live="polite" style={{ textAlign: "center", marginBottom: 8, fontSize: 13, color: C.muted }}>
+            지금 <b style={{ color: C.tealText, fontSize: 15 }}>{nowChordName}</b> 위 — 강조된 음을 노려 보세요
+          </div>
+        )}
+        <ScaleBoard rootPC={root} scale={scale} labelMode={labelMode} mode={effView} boxStart={boxStart} only={only} path={effView === "diag" ? diagPath : null} maxFret={neededFret} chordTones={chordTones} />
         <div style={{ display: "flex", justifyContent: "center", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
           <button onClick={playScale} aria-label="스케일 소리 듣기" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 700, background: C.hub, color: C.text, border: `1px solid ${C.ring}` }}>▶ 스케일 듣기</button>
           {effView !== "all" && <button onClick={playBox} aria-label="이 포지션 소리 듣기" style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 999, cursor: "pointer", fontSize: 13, fontWeight: 700, background: C.hub, color: C.text, border: `1px solid ${C.ring}` }}>▶ {effView === "nps" ? "포지션" : effView === "diag" ? "대각선" : "박스"} 듣기</button>}
         </div>
         <div style={{ display: "flex", justifyContent: "center", gap: 16, marginTop: 12, flexWrap: "wrap", fontSize: 11, color: C.muted }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 13, height: 13, borderRadius: 999, background: C.brass, display: "inline-block" }} />루트</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 999, background: C.hub, border: `1.5px solid ${C.teal}`, display: "inline-block" }} />스케일 음</span>
+          {chordTones ? (<>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 13, height: 13, borderRadius: 999, background: C.tealBg, border: `2px solid ${C.teal}`, boxShadow: `0 0 0 2px ${C.bg}, 0 0 0 3px ${C.teal}`, display: "inline-block" }} />가이드톤 (3·7음)</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 999, background: C.hub, border: `2px solid ${C.teal}`, display: "inline-block" }} />나머지 코드톤</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 999, background: C.hub, border: `1.5px solid ${C.teal}`, opacity: 0.3, display: "inline-block" }} />코드 밖</span>
+          </>) : (<>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 13, height: 13, borderRadius: 999, background: C.brass, display: "inline-block" }} />루트</span>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}><span style={{ width: 12, height: 12, borderRadius: 999, background: C.hub, border: `1.5px solid ${C.teal}`, display: "inline-block" }} />스케일 음</span>
+          </>)}
         </div>
       </div>
       <div style={{ textAlign: "center", fontSize: 11, color: C.muted, marginTop: 12 }}>
         왼쪽이 저음(6번 줄) · 위가 너트
       </div>
+      <TipCard where="scales" ctx={{ scaleName: scale.name, view: effView, caged: isCaged }} />
     </Screen>
   );
 }

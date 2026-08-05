@@ -7,6 +7,7 @@ import Screen from "../components/Screen.jsx";
 import SectionLabel from "../components/SectionLabel.jsx";
 import InfoCard from "../components/InfoCard.jsx";
 import ProgRow from "../components/ProgRow.jsx";
+import TipCard from "../components/TipCard.jsx";
 
 
 export const N = KEYS.length, STEP = 360 / N;
@@ -234,6 +235,7 @@ export function Decoder() {
         </div>
         </>)}
       </div>
+      <TipCard where="decoder" ctx={{ keyIdx: selected }} />
     </Screen>
   );
 }

@@ -7,6 +7,8 @@ import { useJam } from "./JamProvider.jsx";
 import VWheel from "../components/VWheel.jsx";
 import SectionLabel from "../components/SectionLabel.jsx";
 import JamVoicing from "./JamVoicing.jsx";
+import PracticePanel from "./PracticePanel.jsx";
+import TipCard from "../components/TipCard.jsx";
 
 // 잼 미니 플레이어: 탭바 위 얇은 바(접힘) + 탭 시 전체 컨트롤 시트(펼침). App에 한 번만 상주.
 export function JamBar() {
@@ -88,6 +90,8 @@ export function JamBar() {
                 <VWheel label="드럼" items={DRUM_FEELS.map((f) => f.name)} value={jam.drumFeel} onChange={(i) => jam.setDrumFeel(i)} size={13} />
               </div>
             </div>
+            <PracticePanel />
+            <TipCard where="jam" ctx={{ formName, comping: jam.comping, trainer: jam.trainer }} />
             <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16, justifyContent: "center", flexWrap: "wrap" }}>
               <button onClick={() => jam.setPlaying(!jam.playing)} aria-pressed={jam.playing} aria-label={jam.playing ? "잼 정지" : "잼 시작"} style={{ padding: "8px 24px", borderRadius: 999, cursor: "pointer", fontSize: 15, fontWeight: 800, background: jam.playing ? C.brass : C.hub, color: jam.playing ? C.bg : C.text, border: `1px solid ${jam.playing ? C.brass : C.ring}` }}>{jam.playing ? "■ 정지" : "▶ 잼 시작"}</button>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, color: C.muted }}>BPM</span><input type="range" min="60" max="200" value={jam.bpm} onChange={(e) => jam.setBpm(+e.target.value)} aria-label="빠르기 BPM" style={{ width: 110, accentColor: C.brass }} /><span style={{ fontFamily: "ui-monospace, monospace", fontSize: 13, fontWeight: 700, color: C.text, minWidth: 30 }}>{jam.bpm}</span></div>

@@ -36,6 +36,14 @@ export const ADDED_IN_MIGRATION = [
   // ── Phase 3 (디자인 패스 2차) ──
   // 디자인 척도 상수 (src/theme.js)
   "FS", "FS_DISPLAY", "SP", "SP_HAIR", "ACTION", "ACTION_ON",
+
+  // ══ 2차 작업지시서 ══
+  // Phase A — 연습 도구 3종 (카운트인 · 메트로놈 모드 · 템포 트레이너)
+  "COUNT_IN_BEATS", "COUNT_IN_VOICE", "countInHits",
+  "TRAINER_LOOPS_PER_STEP", "TRAINER_STEPS", "PracticePanel",
+  // Phase C — 문맥형 꿀팁 + 용어 미니 사전
+  "SEVENTH_TYPES", "TIPS", "TERMS", "termsIn", "pickTip",
+  "TipCard", "dismissed", "_resetDismissed",
 ];
 
 // 줄 맨 앞의 export / export default / async 를 걷어내고 순수한 선언만 남긴다

@@ -35,6 +35,10 @@ const startJam = async () => {
   await act(async () => { await new Promise((r) => setTimeout(r, 50)); }); // ensureAudio 대기
 };
 
+  // 이 파일의 검사들은 "반주가 끊기지 않는가"를 보는 것이라 카운트인은 꺼 둔다.
+  // (카운트인이 켜져 있으면 첫 한 마디는 스틱 소리만 나서 시작이 늦어진다)
+  const noCountIn = () => localStorage.setItem("guitarism", JSON.stringify({ v: 1, d: { "jam.countIn": false } }));
+
 // 화면 꺼짐 방지 흉내
 function installFakeWakeLock() {
   const state = { requests: 0, released: 0, active: 0 };
@@ -48,6 +52,7 @@ function installFakeWakeLock() {
 }
 
 beforeEach(async () => {
+  noCountIn();
   vi.resetModules();
   fake = installFakeAudio();
   wake = installFakeWakeLock();
@@ -134,6 +139,7 @@ describe("화면 꺼짐 방지", () => {
   it("지원하지 않는 기기에서도 재생이 정상 동작한다", async () => {
     await act(async () => { root.unmount(); });
     delete navigator.wakeLock; // 이 기기는 기능이 없음
+    noCountIn();
     vi.resetModules();
     fake = installFakeAudio();
     const Fresh = (await import("../src/App.jsx")).default;
@@ -157,6 +163,7 @@ describe("아이폰 소리 장치", () => {
 
   it("장치가 안 깨어나면 무음 스위치 안내가 뜬다", async () => {
     await act(async () => { root.unmount(); });
+    noCountIn();
     vi.resetModules();
     fake = installFakeAudio();
     // resume()이 통하지 않는 상황을 흉내

@@ -5,6 +5,7 @@ import { CHORD_TYPES, buildVoicings } from "../theory/chords.js";
 import { strum } from "../audio/play.js";
 import VWheel from "../components/VWheel.jsx";
 import Screen from "../components/Screen.jsx";
+import TipCard from "../components/TipCard.jsx";
 import { useStored, intIn, intInOrNull } from "../storage.js";
 
 
@@ -139,6 +140,7 @@ export function ChordDictionary() {
       <div style={{ textAlign: "center", fontSize: 11, color: C.muted, marginTop: 12 }}>
         왼쪽이 저음(6번 줄) · 오른쪽이 고음(1번 줄)
       </div>
+      <TipCard where="chords" ctx={{ typeId: type.id, bass }} />
     </Screen>
   );
 }
