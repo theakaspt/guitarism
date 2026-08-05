@@ -5,12 +5,11 @@
 <title>기타 이론</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#0E1113" />
-<link rel="manifest" href="manifest.webmanifest" />
 <!-- iOS: 홈 화면에 추가하면 전체화면 앱처럼 실행 -->
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="기타 이론" />
-<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="apple-touch-icon" href="/icon-180.png" />
 <style>
   html, body { margin: 0; padding: 0; background: #0E1113; }
   body {
@@ -25,13 +24,6 @@
 </head>
 <body>
 <div id="root"></div>
-<script src="bundle.js"></script>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").catch(function () {});
-    });
-  }
-</script>
+<script type="module" src="/src/main.jsx"></script>
 </body>
 </html>
