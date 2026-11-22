@@ -6,7 +6,7 @@ import { SCALES, scaleIvSet, cagedPositions, build3nps, diagFrom, inScale } from
 const SEVEN = SCALES.map((s, i) => [s, i]).filter(([s]) => s.notes.length === 7);
 
 describe("3음/줄 (3nps)", () => {
-  it("9개 7음 스케일 × 12루트 × 7포지션 = 756개가 모두 줄당 3음·프렛 0~17이다", () => {
+  it("10개 7음 스케일 × 12루트 × 7포지션 = 840개가 모두 줄당 3음·프렛 0~17이다", () => {
     let count = 0;
     const bad = [];
     for (const [scale, si] of SEVEN) {
@@ -35,7 +35,8 @@ describe("3음/줄 (3nps)", () => {
       }
     }
     expect(bad).toEqual([]);
-    expect(count).toBe(756); // 9 × 12 × 7
+    // 756 → 840: 7음 스케일이 9개 → 10개 (믹솔리디안 ♭13 추가, 이론 오류 수정 1차). 10 × 12 × 7
+    expect(count).toBe(840);
   });
 });
 

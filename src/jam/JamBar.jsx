@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { C, SEGLABEL } from "../theme.js";
-import { KEYS, KEY_PC, noteName } from "../theory/notes.js";
+import { KEYS, KEY_PC, jamRootName } from "../theory/notes.js";
 import { JAM_FORMS, JAM_SYM, COMP_RHYTHMS } from "../theory/jam.js";
 import { DRUM_FEELS } from "../audio/drums.js";
 import { useJam } from "./JamProvider.jsx";
@@ -48,7 +48,6 @@ export function JamBar() {
             {/* 지금 울리는 코드를 밝게 표시 — 재생을 눈으로 따라갈 수 있게 */}
             <div aria-live="polite" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2, justifyContent: "center", marginTop: 12 }}>
               {JAM_FORMS[jam.form].chords.map((ch, i) => {
-                const rp = (keyPc + ch.deg) % 12;
                 const on = i === jam.nowChord;
                 return (<React.Fragment key={i}><span style={{
                   fontSize: 19, fontWeight: 800,
@@ -56,7 +55,7 @@ export function JamBar() {
                   background: on ? C.brass : "transparent",
                   borderRadius: 7, padding: "2px 8px",
                   transition: "background .12s, color .12s",
-                }}>{noteName(keyPc, rp)}{JAM_SYM[ch.type]}</span>{i < JAM_FORMS[jam.form].chords.length - 1 && <span style={{ color: C.dim, margin: "0 4px" }}>›</span>}</React.Fragment>);
+                }}>{jamRootName(keyPc, ch.deg)}{JAM_SYM[ch.type]}</span>{i < JAM_FORMS[jam.form].chords.length - 1 && <span style={{ color: C.dim, margin: "0 4px" }}>›</span>}</React.Fragment>);
               })}
             </div>
             {/* 지금 코드의 드롭2 보이싱 — 가이드톤(3·7음)은 금색 */}

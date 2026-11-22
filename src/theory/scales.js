@@ -16,6 +16,8 @@ export const SCALES = [
   { name: "리디안", notes: [{ iv: 0, deg: "R" }, { iv: 2, deg: "2" }, { iv: 4, deg: "3" }, { iv: 6, deg: "♯4" }, { iv: 7, deg: "5" }, { iv: 9, deg: "6" }, { iv: 11, deg: "7" }] },
   { name: "프리지안", notes: [{ iv: 0, deg: "R" }, { iv: 1, deg: "♭2" }, { iv: 3, deg: "♭3" }, { iv: 5, deg: "4" }, { iv: 7, deg: "5" }, { iv: 8, deg: "♭6" }, { iv: 10, deg: "♭7" }] },
   { name: "로크리안", notes: [{ iv: 0, deg: "R" }, { iv: 1, deg: "♭2" }, { iv: 3, deg: "♭3" }, { iv: 5, deg: "4" }, { iv: 6, deg: "♭5" }, { iv: 8, deg: "♭6" }, { iv: 10, deg: "♭7" }] },
+  // 맨 끝에 추가한 이유: 저장된 scale.index 번호가 안 바뀌게. (코드별 스케일에서 VI7 등에 쓴다 — theory/jam.js)
+  { name: "믹솔리디안 ♭13", notes: [{ iv: 0, deg: "R" }, { iv: 2, deg: "2" }, { iv: 4, deg: "3" }, { iv: 5, deg: "4" }, { iv: 7, deg: "5" }, { iv: 8, deg: "♭6" }, { iv: 10, deg: "♭7" }] },
 ];
 
 // ══════════════════════════════════════════════════════

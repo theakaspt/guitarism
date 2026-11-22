@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { C, SEGLABEL } from "../theme.js";
-import { ROOTS, KEYS, KEY_PC, FORMULA, OPEN_PC, OPEN_MIDI, noteName } from "../theory/notes.js";
+import { C, FS, SEGLABEL } from "../theme.js";
+import { ROOTS, KEYS, KEY_PC, FORMULA, OPEN_PC, OPEN_MIDI, spellScale, chordNoteAt, jamRootName } from "../theory/notes.js";
 import { SCALES, cagedPositions, build3nps, diagFrom, inScale } from "../theory/scales.js";
 import { JAM_FORMS, JAM_SYM, jamKeyScale, jamChordScale, jamForScale } from "../theory/jam.js";
 import { melody } from "../audio/play.js";
@@ -14,6 +14,9 @@ import { useStored, intIn, oneOf } from "../storage.js";
 // ══════════════════════════════════════════════════════
 //  ③ 스케일 (도수 / 음이름 토글)
 // ══════════════════════════════════════════════════════
+// 스케일 철자 결과에서 간격(iv)에 해당하는 음이름을 꺼낸다 (도수 기반 철자 — 이론 오류 수정 1차)
+const nameAtIv = (spelled, scale, iv) => spelled.names[scale.notes.findIndex((n) => n.iv === iv)];
+
 export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, path, maxFret, chordTones }) {
   // 3음/줄 포지션은 16~17프렛까지 올라가는 경우가 있다. 예전에는 15프렛까지만 그려서
   // 그 음들이 화면에서 잘려 보이지 않았다 → 필요한 만큼 지판을 늘려 그린다.
@@ -26,6 +29,7 @@ export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, pat
   const dotY = (f) => nutY + (f - 0.5) * fretGap;
   const openY = nutY - 20, midX = (xOf(0) + xOf(5)) / 2;
   const map = {}; scale.notes.forEach((n) => { map[n.iv] = n.deg; });
+  const spelled = spellScale(rootPC, scale); // 음이름 보기 라벨용 (E♭ 처럼 도수에 맞는 철자)
 
   const dots = [];
   for (let i = 0; i < 6; i++) {
@@ -35,7 +39,7 @@ export function ScaleBoard({ rootPC, scale, labelMode, mode, boxStart, only, pat
       if (map[iv] === undefined) continue;
       if (mode === "box" && (f < boxStart || f > boxStart + 4)) continue;
       if (only && !only.has(i + "-" + f)) continue;
-      const label = labelMode === "note" ? noteName(rootPC, pc) : map[iv];
+      const label = labelMode === "note" ? nameAtIv(spelled, scale, iv) : map[iv];
       // 코드톤 타겟 뷰: 지금 울리는 코드의 구성음이면 표시를 바꾼다
       const ct = chordTones ? chordTones.get(pc) : undefined; // "guide" | "tone" | undefined
       dots.push({ x: xOf(i), y: f === 0 ? openY : dotY(f), label, isRoot: iv === 0, key: i + "-" + f, ct });
@@ -106,13 +110,18 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
     const cr = (keyPC + ch.deg) % 12;
     const miss = FORMULA[ch.type].map((iv) => (cr + iv) % 12).filter((pc) => !scaleSet.has(pc));
     const r = jamChordScale(form, keyPC, ch);
-    return { chord: `${noteName(keyPC, cr)}${JAM_SYM[ch.type]}`, miss, root: r.root, sc: r.sc, note: r.note };
+    const crName = jamRootName(keyPC, ch.deg);
+    // 빠진 음은 그 코드 안에서의 철자로 (A♯7의 3음은 C𝄪 — 코드 도수대로)
+    const missNames = miss.map((pc) => chordNoteAt(crName, ch.type, pc));
+    // 스케일 루트 이름도 잼 키 기준 철자로 (F♯키에서 "E♯m7♭5 → F 로크리안"처럼 ♯·♭이 섞이지 않게)
+    const scRootName = r.root === cr ? crName : jamRootName(keyPC, ((r.root - keyPC) % 12 + 12) % 12);
+    return { chord: `${crName}${JAM_SYM[ch.type]}`, miss, missNames, root: r.root, scRootName, sc: r.sc, note: r.note };
   });
   const warn = chordInfo.filter((c) => c.miss.length);
   const status = warn.length === 0
     ? { ok: true, text: "지금 잼에 그대로 통함" }
     : warn.length === 1
-      ? { ok: false, text: `${warn[0].chord}만 주의 — ${warn[0].miss.map((pc) => noteName(keyPC, pc)).join(", ")} 없음` }
+      ? { ok: false, text: `${warn[0].chord}만 주의 — ${warn[0].missNames.join(", ")} 없음` }
       : { ok: false, text: "둘이 안 맞음 — 한쪽을 맞춰보세요" };
   const colStyle = { flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 4 };
   const capStyle = { fontFamily: "ui-monospace, monospace", fontSize: 11, letterSpacing: "0.1em", color: C.dim, textTransform: "uppercase", display: "flex", alignItems: "center", gap: 4 };
@@ -135,7 +144,7 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
           </div>
           <div style={{ fontSize: 13, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{KEYS[jam.keyIdx].short} · {form.name}</div>
           {!onKeyScale && (
-            <button onClick={() => { setRoot(ks.root); setSc(ks.sc); setPosIdx(0); }} style={btnStyle(C.text)}>{ROOTS[ks.root]} {SCALES[ks.sc].name} 보기</button>
+            <button onClick={() => { setRoot(ks.root); setSc(ks.sc); setPosIdx(0); }} style={btnStyle(C.text)}>{jamRootName(keyPC, ((ks.root - keyPC) % 12 + 12) % 12)} {SCALES[ks.sc].name} 보기</button>
           )}
         </div>
       </div>
@@ -153,9 +162,9 @@ export function JamScaleLink({ jam, root, sc, scale, setRoot, setSc, setPosIdx, 
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                 <button onClick={() => { setRoot(c.root); setSc(c.sc); setPosIdx(0); }}
                   style={{ cursor: "pointer", borderRadius: 8, padding: "4px 8px", fontSize: 13, fontWeight: on ? 800 : 600, background: on ? C.hub : "transparent", color: on ? C.brass : C.text, border: `1px solid ${on ? C.brass : "transparent"}`, whiteSpace: "nowrap" }}>
-                  {c.chord} → {ROOTS[c.root]} {SCALES[c.sc].name}
+                  {c.chord} → {c.scRootName} {SCALES[c.sc].name}
                 </button>
-                {c.miss.length > 0 && <span style={{ fontSize: 11, color: C.roseText }}>{c.miss.map((pc) => noteName(keyPC, pc)).join(", ")} 없음</span>}
+                {c.miss.length > 0 && <span style={{ fontSize: 11, color: C.roseText }}>{c.missNames.join(", ")} 없음</span>}
               </div>
             );
           })}
@@ -217,9 +226,10 @@ export function Scales() {
     const form = JAM_FORMS[jam.form];
     const ch = form.chords[Math.min(jam.nowChord || 0, form.chords.length - 1)];
     const keyPc = KEY_PC[jam.keyIdx];
-    return ch ? `${noteName(keyPc, (keyPc + ch.deg) % 12)}${JAM_SYM[ch.type]}` : null;
+    return ch ? `${jamRootName(keyPc, ch.deg)}${JAM_SYM[ch.type]}` : null;
   })();
 
+  const spelled = spellScale(root, scale);
   const ivset = new Set(scale.notes.map((n) => n.iv));
   const is7 = scale.notes.length === 7;
   const effView = (view === "nps" && !is7) ? "all" : view;
@@ -256,7 +266,7 @@ export function Scales() {
   const positions = effView === "box"
     ? (isCaged ? cagedPos : boxAnchors.map((f) => ({ start: f, label: null })))
     : effView === "nps" ? npsAnchors.map((f) => ({ start: f, label: "3음/줄" }))
-    : effView === "diag" ? diagPositions.map((d) => ({ start: d.start, seq: d.seq, label: (6 - d.s0) + "번줄 " + noteName(root, d.pc) + (d.isRoot ? " (루트)" : "") }))
+    : effView === "diag" ? diagPositions.map((d) => ({ start: d.start, seq: d.seq, label: (6 - d.s0) + "번줄 " + nameAtIv(spelled, scale, ((d.pc - root) % 12 + 12) % 12) + (d.isRoot ? " (루트)" : "") }))
     : [];
   const pIdx = positions.length ? Math.min(posIdx, positions.length - 1) : 0;
   const boxStart = positions[pIdx] ? positions[pIdx].start : 0;
@@ -286,6 +296,8 @@ export function Scales() {
       <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
         <span style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.02em", color: C.text }}>{ROOTS[root]}</span>
         <span style={{ fontSize: 15, color: C.muted }}>{scale.name}</span>
+        {/* 이명동음 루트로 철자됐을 때만 (예: D♭ 내추럴 마이너 → C♯ 표기) */}
+        {spelled.rootName !== ROOTS[root] && <span style={{ fontSize: FS.small, color: C.muted }}>= {spelled.rootName} 표기</span>}
       </div>
 
       <JamScaleLink jam={jam} root={root} sc={sc} scale={scale} setRoot={setRoot} setSc={setSc} setPosIdx={setPosIdx} jamBest={jamBest} />

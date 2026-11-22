@@ -127,7 +127,8 @@ export function jamTimeline(form, keyPC, rhythm, drumFeel) {
 }
 
 // ── 잼 ↔ 스케일 연결 ──────────────────────────────────
-// SCALES 인덱스: 0 메이저 / 1 내추럴마이너 / 8 도리안 / 9 믹솔리디안 / 10 리디안 / 12 로크리안 / 6 하모닉마이너
+// SCALES 인덱스: 0 메이저 / 1 내추럴마이너 / 3 마이너펜타 / 4 메이저블루스 / 5 마이너블루스 / 6 하모닉마이너 / 7 멜로딕마이너
+//   8 도리안 / 9 믹솔리디안 / 10 리디안 / 11 프리지안 / 12 로크리안 / 13 믹솔리디안♭13 (jamChordScale은 7음 스케일만 고름)
 export const _scIv = (i) => SCALES[i].notes.map((n) => n.iv);
 export const _covers = (scRoot, scIdx, chRoot, type) => {
   const s = new Set(_scIv(scIdx).map((x) => (scRoot + x) % 12));
@@ -138,20 +139,29 @@ export function jamKeyScale(form, keyPC) {
   return form.minor ? { root: (keyPC + 9) % 12, sc: 1 } : { root: keyPC, sc: 0 };
 }
 // 코드별 스케일 (문맥 반영). 반환 {root, sc, note}
+//  · 마이너 폼의 V7 → 하모닉 마이너(키 밖 음 포함 — 꿀팁 jam.minor251과 맞물림)
+//  · VI7(메이저 폼) → 아래 일반 규칙으로 고르고 note 문구만 붙임
+//  · 그 외 → 코드 루트에서 시작하는 7음 스케일 중, 코드 구성음을 모두 포함하고
+//    진행의 키(_keySet) 밖 음이 가장 적은 것. 동점이면 SCALES 인덱스가 작은 것.
+//    (예: C키 Am7(턴어라운드)→내추럴 마이너, Em7→프리지안, Fmaj7(마이너 턴어라운드)→리디안, A7→믹솔리디안 ♭13)
 export function jamChordScale(form, keyPC, ch) {
   const cr = (keyPC + ch.deg) % 12;
   const minRoot = (keyPC + 9) % 12;
-  if (form.minor) {
-    if (ch.type === "7") return { root: minRoot, sc: 6, note: "마이너 키의 V7 — 하모닉 마이너에서 나오는 소리(키 밖 음 포함)" };
-    if (ch.type === "m7b5") return { root: cr, sc: 12 };
-    if (ch.type === "m7" && cr === minRoot) return { root: cr, sc: 1 };
-  } else if (ch.type === "7" && ch.deg === 9) {
-    return { root: cr, sc: 9, note: "세컨더리 도미넌트 — 키 밖 음(3음)이 들어감" };
+  if (form.minor && ch.type === "7") {
+    return { root: minRoot, sc: 6, note: "마이너 키의 V7 — 하모닉 마이너에서 나오는 소리(키 밖 음 포함)" };
   }
-  const pref = { m7: [8, 1, 3], "7": [9, 4], maj7: [0, 10, 2], m7b5: [12, 5] }[ch.type];
-  for (const si of pref) if (_covers(cr, si, cr, ch.type)) return { root: cr, sc: si };
-  for (let si = 0; si < SCALES.length; si++) if (_covers(cr, si, cr, ch.type)) return { root: cr, sc: si };
-  return { root: cr, sc: 0 };
+  const ks = _keySet(form, keyPC);
+  let best = -1, bestOut = Infinity;
+  for (let si = 0; si < SCALES.length; si++) {
+    if (SCALES[si].notes.length !== 7) continue;
+    if (!_covers(cr, si, cr, ch.type)) continue;
+    const out = _scIv(si).map((x) => (cr + x) % 12).filter((n) => !ks.has(n)).length;
+    if (out < bestOut) { bestOut = out; best = si; } // 동점이면 먼저 나온(인덱스 작은) 것을 유지
+  }
+  if (best < 0) best = 0; // 안전장치 (현재 데이터에서는 도달하지 않음)
+  const res = { root: cr, sc: best };
+  if (!form.minor && ch.type === "7" && ch.deg === 9) res.note = "세컨더리 도미넌트 — 키 밖 음(3음)이 들어감";
+  return res;
 }
 // 역방향: 이 (루트, 스케일)로 연주 가능한 잼(키·폼) 찾기
 // 기준 = "스케일이 그 진행의 키(조성)에 속하는가". 펜타는 부분집합이라 자연히 통과,

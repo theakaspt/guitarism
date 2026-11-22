@@ -44,6 +44,12 @@ export const ADDED_IN_MIGRATION = [
   // Phase C — 문맥형 꿀팁 + 용어 미니 사전
   "SEVENTH_TYPES", "TIPS", "TERMS", "termsIn", "pickTip",
   "TipCard", "dismissed", "_resetDismissed",
+
+  // ══ 이론 오류 수정 1차 (2단계: 도수 기반 음이름 철자) ══
+  // src/theory/notes.js — 철자 함수와 보조 상수 / Scales.jsx — 간격→음이름 조회 헬퍼
+  "LETTERS", "LETTER_PC", "ACC_STR", "ACC_VAL", "ENHARMONIC_ROOT", "CHORD_DEG",
+  "spellOn", "parseName", "hasDouble", "degNumber", "spellScaleFrom",
+  "spellScale", "spellChord", "chordNoteAt", "jamRootName", "nameAtIv",
 ];
 
 // 줄 맨 앞의 export / export default / async 를 걷어내고 순수한 선언만 남긴다
